@@ -19,9 +19,10 @@ Client Accept Connection From 127.0.0.1 - 55833
 
 # Example
 
-thush@Mac Proxy_server % ./run.sh  \n
-Proxy SERVER Listening on Port 8080 \n
+thush@Mac Proxy_server % ./run.sh
+Proxy SERVER Listening on Port 8080
 Client Accept Connection From 127.0.0.1 - 55833
+
 Recived request:
 
 GET http://httpbin.org/ip HTTP/1.1
@@ -31,10 +32,11 @@ Accept: */*
 Proxy-Connection: Keep-Alive
 
 
-Recived Response 
+
+Recived Response
 
 HTTP/1.1 200 OK
-Date: Sun, 29 Dec 2024 13:02:14 GMT
+Date: Sun, 29 Dec 2024 13:02:14 GM
 Content-Type: application/json
 Content-Length: 33
 Connection: keep-alive
