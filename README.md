@@ -19,8 +19,8 @@ Client Accept Connection From 127.0.0.1 - 55833
 
 # Example
 
-thush@Mac Proxy_server % ./run.sh
-Proxy SERVER Listening on Port 8080
+thush@Mac Proxy_server % ./run.sh  \n
+Proxy SERVER Listening on Port 8080 \n
 Client Accept Connection From 127.0.0.1 - 55833
 Recived request:
 
