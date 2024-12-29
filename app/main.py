@@ -2,7 +2,7 @@ import socket
 import signal
 import threading
 
-def handle_client_request(client_socket:socket):
+def handle_client_request(client_socket):
     print("Recived request:\n")
     
     request = b""
@@ -91,7 +91,7 @@ def main():
         print(f"Client Accept Connection From {addr[0]} - {addr[1]}")
         
 
-        client_handle = threading.Thread(target=handle_client_request,  args=client_socket)
+        client_handle = threading.Thread(target=handle_client_request,  args=(client_socket,))
         client_handle.start()
         
         
