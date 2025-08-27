@@ -1,8 +1,8 @@
 import asyncio
 import struct
 import socket
-from read import read_data
-from send_res import send_response
+from app.read import read_data
+from app.send_res import send_response
 SOCKS_VERSION = 5
 NO_AUTH = 0
 
