@@ -23,73 +23,83 @@ ATYP_IPV4 = 1
 ATYP_DOMAIN = 3
 ATYP_IPV6 = 4
 
-async def relay(source: asyncio.StreamReader, dest: asyncio.StreamWriter):
-    try:
-        while True:
-            data = await source.read(4096)  # Read in 4KB chunks for efficiency
-            if not data:
-                break
-            dest.write(data)
-            await dest.drain()
-    except Exception as e:
-        print(f"Relay error: {e}")
-    finally:
-        dest.close()
-        await dest.wait_closed()
+import asyncio
+import struct
+import socket
 
 async def handle_user(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
-    
     try:
-        # handle handshake
-        version, method = await read_data(reader, 2)
-        if version != SOCKS_VERSION:
-            raise ValueError("unsupport version")
-        
-        new_methods = await read_data(reader,method)
-        
-        if NO_AUTH not in new_methods:
-            raise ValueError("authentication err")
-        
-        # res no auth
-        writer.write(struct.pack("!BB", SOCKS_VERSION, NO_AUTH))
+        # 1. Greeting
+        data = await reader.read(2)
+        if len(data) < 2:
+            print("Invalid greeting")
+            writer.close()
+            return
+
+        ver, nmethods = data[0], data[1]
+        methods = await reader.read(nmethods)
+        print(f"Greeting: ver={ver}, nmethods={nmethods}, methods={methods}")
+
+        # respond no auth
+        writer.write(b"\x05\x00")
         await writer.drain()
-        
-        #handle req
-        v, c,_, atyp = await read_data(reader,4)
-        
-        if v != SOCKS_VERSION or c != CMD_CONNECT:
-            await send_response(writer, REPLY_COMMAND_NOT_SUPPORTED)
+
+        # 2. Request
+        data = await reader.read(4)
+        if len(data) < 4:
+            print("Invalid request header")
+            writer.close()
             return
-        
-        if atyp != ATYP_IPV4:
-            await send_response(writer, REPLY_ADDRESS_TYPE_NOT_SUPPORTED)
+
+        ver, cmd, rsv, atyp = data
+        print(f"Request: ver={ver}, cmd={cmd}, atyp={atyp}")
+
+        if atyp == 1:  # IPv4
+            addr = await reader.read(4)
+            address = socket.inet_ntoa(addr)
+        elif atyp == 3:  # Domain
+            domain_len = (await reader.read(1))[0]
+            domain = await reader.read(domain_len)
+            address = domain.decode()
+        else:
+            print("Unsupported ATYP")
+            writer.close()
             return
-        
-        addr_b = await read_data(reader, 4)
-        port_b = await read_data(reader, 2)
-        target_address = socket.inet_ntoa(addr_b)
-        target_port = struct.unpack("!H", port_b)[0]
-        
-        # connect target
+
+        port_bytes = await reader.read(2)
+        port = struct.unpack("!H", port_bytes)[0]
+
+        print(f"Target: {address}:{port}")
+
+        # 3. Connect
         try:
-            target_reader, target_writer = await asyncio.open_connection(target_address, target_port)
-            # Send success res
-            await send_response(writer, REPLY_SUCCEEDED, atyp=ATYP_IPV4, addr=addr_b, port=port_b)
+            remote_reader, remote_writer = await asyncio.open_connection(address, port)
+            writer.write(b"\x05\x00\x00\x01" + socket.inet_aton("0.0.0.0") + struct.pack("!H", 0))
+            await writer.drain()
         except Exception as e:
-            print(f"Connection failed: {e}")
-            await send_response(writer, REPLY_GENERAL_FAILURE)
+            print(f"Connection to {address}:{port} failed: {e}")
+            writer.write(b"\x05\x01\x00\x01" + socket.inet_aton("0.0.0.0") + struct.pack("!H", 0))
+            await writer.drain()
+            writer.close()
             return
-        
-        await asyncio.gather(
-            relay(reader, target_writer),
-            relay(target_reader,writer)
-        )
-        
+
+        # 4. Relay
+        async def relay(reader, writer):
+            try:
+                while True:
+                    data = await reader.read(4096)
+                    if not data:
+                        break
+                    writer.write(data)
+                    await writer.drain()
+            except Exception as e:
+                print("Relay error:", e)
+            finally:
+                writer.close()
+
+        asyncio.create_task(relay(reader, remote_writer))
+        asyncio.create_task(relay(remote_reader, writer))
+
     except Exception as e:
-        print(f"user handle err {e}")
-    finally:
+        print("Handle_user error:", e)
         writer.close()
-        await writer.wait_closed()
-    
-    
-    
