@@ -15,5 +15,6 @@ async def start_proxy(host="127.0.0.1", port=1080):
         await server.serve_forever()
         
         
-
+if __name__ == "__main__":
+    asyncio.run(start_proxy())
 
