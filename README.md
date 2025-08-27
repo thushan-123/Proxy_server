@@ -1,61 +1,50 @@
-# Run The Proxy Server
+# SOCKS5 Proxy Server
 
-cmd :   ./run.sh
+## Run the Proxy Server
 
-thush@Mac Proxy_server % ./run.sh
+```bash
+./run.sh
+```
 
-after running this cmd shows
+When you run this command, you should see:
 
-Proxy SERVER Listening on Port <PORT_NUMBER>
+```
+Proxy SERVER Listening on Port 1080
+```
 
-# Http Client 
+---
 
-curl --proxy "<PROXY_SERVER_URL>" "<DESTINATION_SERVER_URL>"
+## Test with a Client (cURL)
 
-run this command terminal shows 
+Use the `curl` command with the SOCKS5 proxy option:
 
-Proxy SERVER Listening on Port 8080
+```bash
+curl -x socks5://127.0.0.1:1080 http://httpbin.org/ip
+```
+
+### Example Output
+
+```
+thush@thushans-MacBook-Air proxy_server % ./run.sh
+
+Proxy SERVER Listening on Port 1080
 Client Accept Connection From 127.0.0.1 - 55833
 
-# Example
+Received request via SOCKS5:
 
-thush@Mac Proxy_server % ./run.sh
+curl -x socks5://127.0.0.1:1080 http://httpbin.org/ip
+```
 
-Proxy SERVER Listening on Port 8080
+**Response:**
 
-Client Accept Connection From 127.0.0.1 - 55833
-
-Recived request:
-
-GET http://httpbin.org/ip HTTP/1.1
-
-Host: httpbin.org
-
-User-Agent: curl/8.7.1
-
-Accept: */*
-
-Proxy-Connection: Keep-Alive
-
-Recived Response
-
-HTTP/1.1 200 OK
-
-Date: Sun, 29 Dec 2024 13:02:14 GM
-
-Content-Type: application/json
-
-Content-Length: 33
-
-Connection: keep-alive
-
-Server: gunicorn/19.9.0
-
-Access-Control-Allow-Origin: *
-
-Access-Control-Allow-Credentials: true
-
-
+```json
 {
-  "origin": "175.157.141.19"
+  "origin": "175.157.142.225"
 }
+```
+
+---
+
+## Notes
+- The proxy runs on **port 1080** by default.
+- You can test with any HTTP/HTTPS destination using `curl -x socks5://127.0.0.1:1080 <URL>`.
