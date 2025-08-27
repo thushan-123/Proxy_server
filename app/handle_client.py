@@ -29,7 +29,6 @@ import socket
 
 async def handle_user(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
     try:
-        # 1. Greeting
         data = await reader.read(2)
         if len(data) < 2:
             print("Invalid greeting")
@@ -40,11 +39,9 @@ async def handle_user(reader: asyncio.StreamReader, writer: asyncio.StreamWriter
         methods = await reader.read(nmethods)
         print(f"Greeting: ver={ver}, nmethods={nmethods}, methods={methods}")
 
-        # respond no auth
         writer.write(b"\x05\x00")
         await writer.drain()
 
-        # 2. Request
         data = await reader.read(4)
         if len(data) < 4:
             print("Invalid request header")
@@ -54,7 +51,7 @@ async def handle_user(reader: asyncio.StreamReader, writer: asyncio.StreamWriter
         ver, cmd, rsv, atyp = data
         print(f"Request: ver={ver}, cmd={cmd}, atyp={atyp}")
 
-        if atyp == 1:  # IPv4
+        if atyp == 1:  # chk ipv4
             addr = await reader.read(4)
             address = socket.inet_ntoa(addr)
         elif atyp == 3:  # Domain
@@ -71,7 +68,7 @@ async def handle_user(reader: asyncio.StreamReader, writer: asyncio.StreamWriter
 
         print(f"Target: {address}:{port}")
 
-        # 3. Connect
+        # Connect destn
         try:
             remote_reader, remote_writer = await asyncio.open_connection(address, port)
             writer.write(b"\x05\x00\x00\x01" + socket.inet_aton("0.0.0.0") + struct.pack("!H", 0))
@@ -83,7 +80,6 @@ async def handle_user(reader: asyncio.StreamReader, writer: asyncio.StreamWriter
             writer.close()
             return
 
-        # 4. Relay
         async def relay(reader, writer):
             try:
                 while True:
