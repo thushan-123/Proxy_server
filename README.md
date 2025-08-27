@@ -25,7 +25,7 @@ curl -x socks5://127.0.0.1:1080 http://httpbin.org/ip
 ### Example Output
 
 ```
-thush@thushans-MacBook-Air proxy_server % ./run.sh
+./run.sh
 
 Proxy SERVER Listening on Port 1080
 Client Accept Connection From 127.0.0.1 - 55833
