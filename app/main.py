@@ -2,7 +2,7 @@ import asyncio
 import struct
 import socket
 
-from .handle_client import handle_user
+from handle_client import handle_user
 
 
 async def start_proxy(host="127.0.0.1", port=1080):
